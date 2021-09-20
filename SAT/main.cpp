@@ -17,7 +17,7 @@ int main()
 	cout << "\n";
 
 	SAT* _SAT = new SAT(string(_expression), _nbVariable);
-	_SAT->Launch();
+	_SAT->GenerateSolution();
 
 	delete _SAT;
 	return 0;

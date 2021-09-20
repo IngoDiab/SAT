@@ -1,4 +1,11 @@
 #pragma once
+
+#define SYMBOL_OR '|'
+#define SYMBOL_AND '&'
+#define SYMBOL_NOT '!'
+#define SYMBOL_PARANTHESE_OPEN '('
+#define SYMBOL_PARANTHESE_CLOSE ')'
+
 class Evaluable;
 class SymboleAtomique;
 
@@ -16,10 +23,11 @@ public:
 	~SAT();
 
 public:
-	void Launch();
+	void GenerateSolution();
 	Evaluable* GetSymbole(string _symbole);
 	bool ContainsSymbole(string _symbole);
 	string RemoveParanthese(string _expression);
+	bool IsLessImportant(char _char1, char _char2);
 	size_t GetCharParse(string _expression);
 	Evaluable* Parse(string _expression);
 	int CalculateStatements();
