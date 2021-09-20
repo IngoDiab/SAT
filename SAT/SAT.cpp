@@ -27,21 +27,6 @@ void SAT::Launch()
 	CheckCaractExpr(_nbTrueStatement);
 }
 
-void SAT::CreateExpression()
-{
-	/*SymboleAtomique* a = new SymboleAtomique(string("a"));
-	m_Variables[0] = a;
-	SymboleAtomique* b = new SymboleAtomique(string("b"));
-	m_Variables[1] = b;
-	SymboleAtomique* c = new SymboleAtomique(string("c"));
-	m_Variables[2] = c;
-
-	Not* notA = new Not(*a);
-	And* notAandB = new And(*notA, *b);
-	m_Expression = new Or(*notAandB, *c);*/
-	//m_Expression = Parse(m_ExpressionString);
-}
-
 Evaluable* SAT::GetSymbole(string _symbole) 
 {
 	if (m_NbCurrentVariables == 0) return nullptr;
@@ -63,28 +48,61 @@ bool SAT::ContainsSymbole(string _symbole)
 	return false;
 }
 
+string SAT::RemoveParanthese(string _expression)
+{
+	vector<size_t> _openParanthese;
+	vector<size_t> _closeParanthese;
+	for (int i = 0; i < _expression.size(); i++)
+	{
+		if (_expression.at(i) == '(') _openParanthese.push_back(i);
+		else if (_expression.at(i) == ')') _closeParanthese.push_back(i);
+	}
+
+	const bool _existsParanthese = !_openParanthese.size() == 0 && !_closeParanthese.size() == 0;
+	if (!_existsParanthese) return _expression;
+	const bool _onlyOnePair = _openParanthese.size() == 1 && _closeParanthese.size() == 1;
+	bool _canRemoveParanthese = false;
+
+	if (_onlyOnePair) _canRemoveParanthese = _openParanthese.at(0) == 0 && _closeParanthese.at(0) == _expression.size() - 1;
+	else _canRemoveParanthese = _openParanthese.at(_openParanthese.size() - 1) < _closeParanthese.at(_closeParanthese.size() - 2);
+
+	if (_canRemoveParanthese) return _expression.substr(1, _expression.size() - 2);
+	return _expression;
+}
+
+
 size_t SAT::GetCharParse(string _expression)
 {
-	return _expression.find('&');
+	const unsigned int _firstOr = _expression.find('|');
+	if (_firstOr < _expression.size()) return _firstOr;
+	const unsigned int _firstAnd = _expression.find('&');
+	if (_firstAnd < _expression.size()) return _firstAnd;
+	const unsigned int _firstNot = _expression.find('!');
+	if (_firstNot < _expression.size()) return _firstNot;
+	return -1;
 }
 
 Evaluable* SAT::Parse(string _expression) 
 {
-	size_t _parsingCharPos = GetCharParse(_expression);
-	string _leftMember = _expression.substr(0, _parsingCharPos);
-	string _rightMember = _expression.substr(_parsingCharPos+1);
-	if (_parsingCharPos >= _expression.size()) {
-		Evaluable* _symbole = GetSymbole(_expression);
+	string _parantheseRemoved = RemoveParanthese(_expression);
+	size_t _parsingCharPos = GetCharParse(_parantheseRemoved);
+	if (_parsingCharPos == -1) 
+	{
+		Evaluable* _symbole = GetSymbole(_parantheseRemoved);
 		if (_symbole) return _symbole;
-		SymboleAtomique* _atome = new SymboleAtomique(_expression);
+		SymboleAtomique* _atome = new SymboleAtomique(_parantheseRemoved);
 		m_Variables[m_NbCurrentVariables] = _atome;
 		m_NbCurrentVariables++;
 		return _atome;
 	}
 
-	switch (_expression.at(_parsingCharPos))
+	string _leftMember = _parantheseRemoved.substr(0, _parsingCharPos);
+	string _rightMember = _parantheseRemoved.substr(_parsingCharPos+1);
+	//cout << _leftMember << endl;
+	//cout << _rightMember << endl;
+
+	switch (_parantheseRemoved.at(_parsingCharPos))
 	{
-		cout << _parsingCharPos << endl;
 		case '&':
 			return new And(Parse(_leftMember), Parse(_rightMember));
 
@@ -93,21 +111,12 @@ Evaluable* SAT::Parse(string _expression)
 
 		case '!':
 			return new Not(Parse(_rightMember));
-
-		default:
-			Evaluable* _symbole = GetSymbole(_expression);
-			if (_symbole) return _symbole;
-			SymboleAtomique* _atome = new SymboleAtomique(_expression);
-			m_Variables[m_NbCurrentVariables] = _atome;
-			m_NbCurrentVariables++;
-			return _atome;
 	}
 }
 
 int SAT::CalculateStatements()
 {
 	unsigned short _nbTrueStatement = 0;
-	cout << m_NbVariables << endl;
 	for (unsigned short i = 0; i < pow(2, m_NbVariables); i++)
 	{
 		SetVariablesValue(i);

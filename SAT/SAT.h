@@ -17,9 +17,9 @@ public:
 
 public:
 	void Launch();
-	void CreateExpression();
 	Evaluable* GetSymbole(string _symbole);
 	bool ContainsSymbole(string _symbole);
+	string RemoveParanthese(string _expression);
 	size_t GetCharParse(string _expression);
 	Evaluable* Parse(string _expression);
 	int CalculateStatements();
